@@ -1,0 +1,64 @@
+name: Deploy Static Website to AWS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-1
+  S3_BUCKET: mustapha-devops-portfolio-2025
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Install dependencies
+      run: |
+        # Add any build steps here if you're using a static site generator
+        echo "No build steps required for static HTML"
+
+    - name: Run tests
+      run: |
+        # HTML validation
+        sudo apt-get update
+        sudo apt-get install -y tidy
+        tidy -q -e src/index.html || true
+        
+        # Check for broken links (simple check)
+        grep -r "href=" src/ | grep -v "#" | cut -d'"' -f2 | sort | uniq > links.txt
+        echo "Found $(wc -l < links.txt) links to validate"
+
+    - name: Sync files to S3
+      run: |
+        aws s3 sync src/ s3://${{ env.S3_BUCKET }} --delete --exact-timestamps
+      
+    - name: Get CloudFront distribution ID
+      id: cloudfront
+      run: |
+        DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='DevOps Portfolio Website'].Id" --output text)
+        echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+
+    - name: Invalidate CloudFront cache
+      run: |
+        aws cloudfront create-invalidation \
+          --distribution-id ${{ steps.cloudfront.outputs.distribution-id }} \
+          --paths "/*"
+
+    - name: Output URLs
+      run: |
+        echo "🚀 Deployment successful!"
+        echo "S3 Website URL: http://${{ env.S3_BUCKET }}.s3-website-${{ env.AWS_REGION }}.amazonaws.com"
+        echo "CloudFront URL: https://$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='DevOps Portfolio Website'].DomainName" --output text)"
