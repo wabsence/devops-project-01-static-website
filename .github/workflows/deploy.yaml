@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  S3_BUCKET: mustapha-devops-portfolio-2025
+  S3_BUCKET: wabsense-devops-portfolio-2025
 
 jobs:
   deploy:
@@ -45,20 +45,20 @@ jobs:
       run: |
         aws s3 sync src/ s3://${{ env.S3_BUCKET }} --delete --exact-timestamps
       
-    - name: Get CloudFront distribution ID
-      id: cloudfront
-      run: |
-        DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='DevOps Portfolio Website'].Id" --output text)
-        echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+    # - name: Get CloudFront distribution ID
+    #   id: cloudfront
+    #   run: |
+    #     DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='DevOps Portfolio Website'].Id" --output text)
+    #     echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
 
-    - name: Invalidate CloudFront cache
-      run: |
-        aws cloudfront create-invalidation \
-          --distribution-id ${{ steps.cloudfront.outputs.distribution-id }} \
-          --paths "/*"
+    # - name: Invalidate CloudFront cache
+    #   run: |
+    #     aws cloudfront create-invalidation \
+    #       --distribution-id ${{ steps.cloudfront.outputs.distribution-id }} \
+    #       --paths "/*"
 
     - name: Output URLs
       run: |
         echo "🚀 Deployment successful!"
         echo "S3 Website URL: http://${{ env.S3_BUCKET }}.s3-website-${{ env.AWS_REGION }}.amazonaws.com"
-        echo "CloudFront URL: https://$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='DevOps Portfolio Website'].DomainName" --output text)"
+        # echo "CloudFront URL: https://$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='DevOps Portfolio Website'].DomainName" --output text)"

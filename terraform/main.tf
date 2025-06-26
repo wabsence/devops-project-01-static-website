@@ -11,6 +11,7 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
+#   profile = "" 
 }
 
 # S3 bucket for website hosting
@@ -76,74 +77,74 @@ resource "aws_cloudfront_origin_access_control" "website" {
 }
 
 # CloudFront distribution
-resource "aws_cloudfront_distribution" "website" {
-  origin {
-    domain_name              = aws_s3_bucket.website.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.website.id
-    origin_id                = "S3-${var.bucket_name}"
-  }
+# resource "aws_cloudfront_distribution" "website" {
+#   origin {
+#     domain_name              = aws_s3_bucket.website.bucket_regional_domain_name
+#     origin_access_control_id = aws_cloudfront_origin_access_control.website.id
+#     origin_id                = "S3-${var.bucket_name}"
+#   }
 
-  enabled             = true
-  is_ipv6_enabled     = true
-  comment             = "DevOps Portfolio Website"
-  default_root_object = "index.html"
+#   enabled             = true
+#   is_ipv6_enabled     = true
+#   comment             = "DevOps Portfolio Website"
+#   default_root_object = "index.html"
 
-  # Cache behaviors
-  default_cache_behavior {
-    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "S3-${var.bucket_name}"
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
+#   # Cache behaviors
+#   default_cache_behavior {
+#     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+#     cached_methods         = ["GET", "HEAD"]
+#     target_origin_id       = "S3-${var.bucket_name}"
+#     compress               = true
+#     viewer_protocol_policy = "redirect-to-https"
 
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
+#     forwarded_values {
+#       query_string = false
+#       cookies {
+#         forward = "none"
+#       }
+#     }
 
-    min_ttl     = 0
-    default_ttl = 86400   # 1 day
-    max_ttl     = 31536000 # 1 year
-  }
+#     min_ttl     = 0
+#     default_ttl = 86400   # 1 day
+#     max_ttl     = 31536000 # 1 year
+#   }
 
-  # Custom error pages
-  custom_error_response {
-    error_caching_min_ttl = 300
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
-  }
+#   # Custom error pages
+#   custom_error_response {
+#     error_caching_min_ttl = 300
+#     error_code            = 404
+#     response_code         = 200
+#     response_page_path    = "/index.html"
+#   }
 
-  custom_error_response {
-    error_caching_min_ttl = 300
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
-  }
+#   custom_error_response {
+#     error_caching_min_ttl = 300
+#     error_code            = 403
+#     response_code         = 200
+#     response_page_path    = "/index.html"
+#   }
 
-  # Distribution restrictions
-  restrictions {
-    geo_restriction {
-      restriction_type = "none"
-    }
-  }
+#   # Distribution restrictions
+#   restrictions {
+#     geo_restriction {
+#       restriction_type = "none"
+#     }
+#   }
 
-  # SSL Certificate
-  viewer_certificate {
-    cloudfront_default_certificate = true
-    # For custom domain, you would use:
-    # acm_certificate_arn = aws_acm_certificate.website.arn
-    # ssl_support_method  = "sni-only"
-  }
+#   # SSL Certificate
+#   viewer_certificate {
+#     cloudfront_default_certificate = true
+#     # For custom domain, you would use:
+#     # acm_certificate_arn = aws_acm_certificate.website.arn
+#     # ssl_support_method  = "sni-only"
+#   }
 
-  tags = {
-    Name        = "DevOps Portfolio CDN"
-    Environment = var.environment
-    Project     = "Static Website"
-  }
-}
+#   tags = {
+#     Name        = "DevOps Portfolio CDN"
+#     Environment = var.environment
+#     Project     = "Static Website"
+#   }
+# }
 
 # Optional: Route 53 hosted zone (if using custom domain)
 # resource "aws_route53_zone" "website" {
